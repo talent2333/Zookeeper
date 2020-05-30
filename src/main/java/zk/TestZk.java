@@ -30,6 +30,7 @@ public class TestZk {
             public void process(WatchedEvent watchedEvent) {}
         });
     }
+
     @After
     public void close() throws InterruptedException {
         zk.close();
@@ -38,6 +39,7 @@ public class TestZk {
     /**
      * 获取子节点
      * 监听节点
+     *
      * @throws IOException
      */
     @Test
@@ -60,6 +62,7 @@ public class TestZk {
 
     /**
      * 创建节点
+     * 参数1:节点名称 参数2:节点数据
      * 参数3:权限控制 参数4:节点类型(1.带序列 2.持久性)
      */
     @Test
@@ -72,13 +75,13 @@ public class TestZk {
     }
 
     /**
-     * 获取节点具体数值
+     * 获取节点数据
      */
     @Test
-    public void getNode() throws KeeperException, InterruptedException {
+    public void getData() throws KeeperException, InterruptedException {
 
         Stat stat = getStat("/xty");
-        if (stat == null){
+        if (stat == null) {
             System.out.println("xty 不存在");
             return;
         }
@@ -90,43 +93,69 @@ public class TestZk {
 
     //获取节点状态
     private Stat getStat(String path) throws KeeperException, InterruptedException {
-        return zk.exists(path,false);
+        return zk.exists(path, false);
     }
+
     /**
      * 节点是否存在
-     * @param path  访问路径
+     *
+     * @param path 访问路径
      * @throws KeeperException
      * @throws InterruptedException
      */
     @Test
-    public void exist() throws KeeperException, InterruptedException {
+    public void existNode() throws KeeperException, InterruptedException {
 
         Stat stat = zk.exists("/xty12", false);
-        if(stat == null){
+        if (stat == null) {
             System.out.println("节点不存在");
-        }else {
+        } else {
             System.out.println("节点存在");
         }
     }
+
     /**
-     * 设置节点数值
+     * 设置节点数据
      */
     @Test
-    public void setNode() throws KeeperException, InterruptedException {
+    public void setData() throws KeeperException, InterruptedException {
 
         Stat stat = getStat("/xty");
-        if (stat == null){
+        if (stat == null) {
             System.out.println("节点不存在");
             return;
         }
 //        Stat resultStat = zk.setData("/xty", "xitianyu".getBytes(), stat.getVersion());
         Stat resultStat = zk.setData("/xty", "phone".getBytes(), -1);
     }
+
+    /**
+     * 删除节点-递归方法
+     *
+     * @param path 递归路径
+     * @param zk   服务器对象
+     * @throws KeeperException
+     * @throws InterruptedException
+     */
+    private void delNodes(String path, ZooKeeper zk) throws KeeperException, InterruptedException {
+
+        List<String> children = zk.getChildren(path, false);
+        if (children.size() == 0) {
+            zk.delete(path, -1);
+        } else {
+            for (String child : children) {
+                delNodes(path + "/" + child, zk);
+            }
+            zk.delete(path, -1);
+        }
+    }
+
     /**
      * 删除节点
      */
     @Test
     public void del() throws KeeperException, InterruptedException {
-        zk.delete("/xty",-1);
+
+        delNodes("/a", zk);
     }
 }
